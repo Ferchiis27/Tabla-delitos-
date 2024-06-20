@@ -1,0 +1,153 @@
+---
+title: "Delitos Cometidos en C.R - 2023"
+author: "Fernanda Chinchilla"
+format: 
+  dashboard: 
+    orientation: rows
+          
+---
+
+```{r}
+#| label: carga-paquetes
+
+library(tidyverse)
+library(plotly)
+library(DT)
+library(leaflet)
+library(leaflet.extras)
+library(leafem)
+```
+
+```{r}
+#| label: carga-datos
+
+delitos <- 
+  read_delim("estadisticaspoliciales2023.csv")
+```
+
+# Generales
+
+## Row
+
+```{r}
+#| label: grafico-tipos-delitos
+#| title: "Cantidad de delitos por tipo"
+
+grafico_ggplot2 <-
+delitos |>
+  group_by(Delito) |> 
+  summarize(n = n()) |>
+  ggplot(aes(
+    x = reorder(Delito, n), 
+    y = n 
+  )) +
+  geom_col() +
+coord_flip() +
+  xlab("Tipo de delito") + 
+  ylab("Cantidad")
+
+ggplotly(grafico_ggplot2) |> config(locale = "es")
+```
+
+```{r}
+#| label: grafico-delitos-provincias
+#| title: "Cantidad de delitos por provincia"
+
+grafico_ggplot2 <-
+delitos |>
+  group_by(Provincia) |> 
+  summarize(n = n()) |>
+  ggplot(aes(
+    x = reorder(Provincia, n), 
+    y = n 
+  )) +
+  geom_col() +
+coord_flip() +
+  xlab("Provincia") + 
+  ylab("Cantidad")
+
+ggplotly(grafico_ggplot2) |> config(locale = "es")
+```
+
+## Row
+
+```{r}
+#| label: grafico-delitos-nacionalidad
+#| title: "Cantidad de delitos por nacionalidad"
+
+grafico_ggplot2 <-
+delitos |>
+  group_by(Nacionalidad) |> 
+  summarize(n = n()) |>
+  arrange(desc(n)) |>
+  slice(1:5) |>
+  ggplot(aes(
+    x = reorder(Nacionalidad, - n), 
+    y = n 
+  )) +
+  geom_col() +
+coord_flip() +
+  xlab("Nacionalidad") + 
+  ylab("Cantidad")
+
+ggplotly(grafico_ggplot2) |> config(locale = "es")
+```
+
+# Homicidios 
+```{r}
+#| label: filtro_homicidios
+
+homicidios <- 
+  delitos |>
+  filter(Delito == "HOMICIDIO")
+```
+
+```{r}
+#| label: grafico-homicidios-nacionalidad
+#| title: "Cantidad de homicidios por nacionalidad"
+
+grafico_ggplot2 <-
+homicidios |>
+  group_by(Nacionalidad) |> 
+  summarize(n = n()) |>
+  arrange(desc(n)) |>
+  slice(1:7) |>
+  ggplot(aes(
+    x = reorder(Nacionalidad, - n), 
+    y = n 
+  )) +
+  geom_col() +
+coord_flip() +
+  xlab("Nacionalidad") + 
+  ylab("Cantidad")
+
+ggplotly(grafico_ggplot2) |> config(locale = "es")
+```
+
+# Otros
+```{r}
+#| label: tabla
+
+homicidios |>
+  datatable()
+```
+
+```{r}
+leaflet() |>
+  addTiles() |>
+  addProviderTiles(
+    providers$Esri.WorldImagery,
+    group = "Imagenes Satelitales (Esri World Imagery"
+  ) |>
+  setView(
+    lng = -84,
+    lat = 10,
+    zoom = 7
+  ) |>
+  addResetMapButton() |>
+  addSearchOSM() |>
+  addMouseCoordinates() |>
+  addFullscreenControl() |>
+  hideGroup("Registro de presencia")
+```
+
